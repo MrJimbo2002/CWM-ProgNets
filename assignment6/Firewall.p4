@@ -1,6 +1,8 @@
 /* -*- P4_16 -*- */
 #include <core.p4>
 #include <v1model.p4>
+#define MAX_DDos_Size 131072
+#define DDoS_threshold 200
 
 const bit<16> TYPE_IPV4 = 0x800;
 
@@ -87,9 +89,43 @@ control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
                   
+//*The majoy appending function of my firewall corresponds to the DDOS attact protection utilising registers as temporary store of 
+count min sketch values. The settling quota of maximum number of a specific IP address is defined as 200 and cms refers to count min sketch
+as abbreviation below.
+
+
                 register<bit<32>>(1024) occSlots1;
 		register<bit<32>>(1024) occSlots2;
 		register<bit<32>>(1024) occSlots3;
+		register<bit<1>>(MAX_DDoS_SIZE) cms1_0;
+		register<bit<1>>(MAX_DDoS_SIZE) cms1_1;
+		register<bit<1>>(MAX_DDoS_SIZE) cms1_2;
+		register<bit<1>>(MAX_DDoS_SIZE) cms1_3;
+		register<bit<1>>(MAX_DDoS_SIZE) cms1_4;
+		register<bit<1>>(MAX_DDoS_SIZE) cms1_5;
+		register<bit<1>>(MAX_DDoS_SIZE) cms1_6;
+		register<bit<1>>(MAX_DDoS_SIZE) cms1_7;
+		
+		register<bit<1>>(MAX_DDoS_SIZE) cms2_0;
+		register<bit<1>>(MAX_DDoS_SIZE) cms2_1;
+		register<bit<1>>(MAX_DDoS_SIZE) cms2_2;
+		register<bit<1>>(MAX_DDoS_SIZE) cms2_3;
+		register<bit<1>>(MAX_DDoS_SIZE) cms2_4;
+		register<bit<1>>(MAX_DDoS_SIZE) cms2_5;
+		register<bit<1>>(MAX_DDoS_SIZE) cms2_6;
+		register<bit<1>>(MAX_DDoS_SIZE) cms2_7;
+
+		register<bit<1>>(MAX_DDoS_SIZE) cms3_0;
+		register<bit<1>>(MAX_DDoS_SIZE) cms3_1;
+		register<bit<1>>(MAX_DDoS_SIZE) cms3_2;
+		register<bit<1>>(MAX_DDoS_SIZE) cms3_3;
+		register<bit<1>>(MAX_DDoS_SIZE) cms3_4;
+		register<bit<1>>(MAX_DDoS_SIZE) cms3_5;
+		register<bit<1>>(MAX_DDoS_SIZE) cms3_6;
+		register<bit<1>>(MAX_DDoS_SIZE) cms3_7;
+		
+		
+		
                   
                   
     action drop() {
@@ -121,6 +157,10 @@ control MyIngress(inout headers hdr,
         /* TODO: fix ingress control logic
          *  - ipv4_lpm should be applied only when IPv4 header is valid
          */
+	 
+	 //* Index in Count-min Sketch (Size 1024)
+	 
+	 
         if(hdr.ipv4.isValid()){ 
             ipv4_lpm.apply();
         }
