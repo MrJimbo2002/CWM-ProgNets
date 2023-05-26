@@ -1,0 +1,1 @@
+table_add MyIngress.ipv4 MyIngress.ipv4_forward 192.168.10.1 192.168.10.2 17 5000 1024 => 0c:37:96:5f:8a:0 0 

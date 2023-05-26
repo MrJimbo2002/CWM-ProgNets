@@ -1,0 +1,74 @@
+#!/bin/bash
+
+INPUT="$1"
+
+# Server side 
+# IP address of source host with CIDR (netmask)
+SRC_IP="169.254.21.80/16"
+# IP address of destination host
+DST_IP="169.254.21.222"
+# MAC address of destination host
+DST_MAC="e4:5f:01:8c:7e:52"
+# Interface name (USB-Ethernet) of the host
+ETH="eth0"
+
+# Switch side (Raspberry Pi)
+# The directory to your P4 program
+DIR="/home/ubuntu/CWM-ProgNets/assignment6"
+# Modify the name of P4 program here
+P4_NAME="Firewall"
+# The name of the first interface on Raspberry Pi
+INT1="enx0c37965f8a10"
+# The name of the second interface on Raspberry Pi
+# Note: you may need to change the run/exec command if a single interface is used
+INT2="eth1"
+
+#configure IP address
+if [ "$INPUT" = "ip" ] 
+then
+    sudo ip addr add dev $ETH $SRC_IP
+#Add a route    
+elif [ "$INPUT" = "route" ] 
+then
+    sudo ip route add dev $ETH $DST_IP
+#Configure ARP
+elif [ "$INPUT" = "arp" ]
+then
+    sudo arp -s $DST_IP $DST_MAC
+#Configure route and ARP
+elif [ "$INPUT" = "config" ]
+then
+    sudo ip route add dev $ETH $DST_IP
+    sudo arp -s $DST_IP $DST_MAC
+#Compile P4 program
+elif [ "$INPUT" = "compile" ]
+then
+    p4c --target bmv2 --arch v1model --std p4-16 $DIR$P4_NAME.p4
+#Run P4 program
+elif [ "$INPUT" = "run" ]
+then
+    if [ -f "$P4_NAME.json" ]; then
+        sudo simple_switch -i 0@$INT1 $DIR/$P4_NAME.json &
+    else
+        echo "Please compile P4 program first!"
+    fi
+#Compile and run a P4 program
+elif [ "$INPUT" = "exec" ]
+then
+    p4c --target bmv2 --arch v1model --std p4-16 $P4_NAME.p4
+    if [ -f "$P4_NAME.json" ]; then
+        sudo simple_switch -i 0@$INT1 $P4_NAME.json &
+    fi
+#Kill all running p4 programs
+elif [ "$INPUT" = "kill" ]
+then
+    sudo kill $(ps aux|grep simple_switch|awk '{if($0 ~ /json/) print $2}')
+#Load control plane configurations using CLI
+elif [ "$INPUT" = "cli" ]
+then
+    simple_switch_CLI < $DIR/commands.txt
+else
+    echo "Please type correct parameters"
+fi
+
+
